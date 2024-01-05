@@ -1,6 +1,9 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
+use std::{fs::File, io::BufReader};
+use byteorder::{BigEndian, ReadBytesExt};
+
 enum OpCodes {
     // branch
     BR = 0,
@@ -167,6 +170,29 @@ impl VM {
     fn new() -> VM {
         VM { mem: Memory::new() }
     }
+
+    fn read_program(&mut self, path: &String) {
+        let f = File::open(path).expect("Could not open program file");
+        let mut f = BufReader::new(f);
+        let base_addr = f.read_u16::<BigEndian>().expect("Program file could not be read");
+
+        let mut addr = base_addr;
+        loop {
+            match f.read_u16::<BigEndian>() {
+                Ok(word) => {
+                    self.mem.set_mem(addr, word);
+                    addr += 1;
+                }
+                Err(e) => {
+                    if e.kind() == std::io::ErrorKind::UnexpectedEof {
+                        break;
+                    } else {
+                        panic!("Can not read instruction: {:?}", e);
+                    }
+                }
+            }
+        }
+    }
 }
 
 ////////////////
@@ -174,11 +200,7 @@ impl VM {
 ////////////////
 
 fn main() {
-    println!("Hello, world!");
+    let mut vm = VM::new();
 
-    let mut regs = Registers::new();
-    println!("was {}", regs.get_reg(0));
-    regs.set_reg_with_cond(0, (0i16) as u16);
-    println!("set to {}", regs.get_reg(0));
-    println!("condition: {}", regs.get_reg(9));
+    vm.read_program(&"hello-world.obj".to_string());
 }
