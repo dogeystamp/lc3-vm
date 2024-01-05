@@ -1,8 +1,11 @@
+// NOTE
+// trying this out https://www.pathsensitive.com/2023/12/should-you-split-that-file.html
+
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use std::{fs::File, io::BufReader};
 use byteorder::{BigEndian, ReadBytesExt};
+use std::{fs::File, io::BufReader};
 
 enum OpCodes {
     // branch
@@ -19,7 +22,7 @@ enum OpCodes {
     AND,
     // load register
     LDR,
-    // store registerj
+    // store register
     STR,
     // return from interrupt (unused)
     RTI,
@@ -187,7 +190,9 @@ impl VM {
         // Therefore, it flips each pair of bytes.
         // Meanwhile, `hed` uses big-endian.
         // To make hexdump ignore words, pass the `-C` flag for a byte-by-byte output.
-        let base_addr = f.read_u16::<BigEndian>().expect("Program file could not be read");
+        let base_addr = f
+            .read_u16::<BigEndian>()
+            .expect("Program file could not be read");
 
         let mut addr = base_addr;
         loop {
