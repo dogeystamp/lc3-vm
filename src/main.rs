@@ -174,6 +174,19 @@ impl VM {
     fn read_program(&mut self, path: &String) {
         let f = File::open(path).expect("Could not open program file");
         let mut f = BufReader::new(f);
+
+        // NOTE
+        // LC-3 works with 16-bit words, in big endian.
+        // Endianness is the order of bytes *within a word*.
+        // Big endian is the "natural" order (left to right, start with most significant byte).
+        // This means that 0x3000 is encoded as 30 00.
+        // Little endian is commonly used on processors (see why at https://softwareengineering.stackexchange.com/questions/95556).
+        // For example, 0x12345678 (if we assume 32-bit words) would be encoded as 78 56 34 12.
+        // It turns out that the `hexdump` command uses 16-bit words and little-endian by default
+        // (at least on my machine).
+        // Therefore, it flips each pair of bytes.
+        // Meanwhile, `hed` uses big-endian.
+        // To make hexdump ignore words, pass the `-C` flag for a byte-by-byte output.
         let base_addr = f.read_u16::<BigEndian>().expect("Program file could not be read");
 
         let mut addr = base_addr;
