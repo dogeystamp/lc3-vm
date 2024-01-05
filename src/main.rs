@@ -40,7 +40,7 @@ enum OpCodes {
 // registers
 ////////////////
 
-// 
+//
 // condition flags
 //
 
@@ -130,15 +130,48 @@ impl Registers {
 }
 
 ////////////////
-// VM interface
+// memory
 ////////////////
-
 
 const MEM_SIZE: usize = 1 << 16;
 
-struct VM {
-    mem: [u16; MEM_SIZE]
+struct Memory {
+    data: [u16; MEM_SIZE],
 }
+
+impl Memory {
+    fn new() -> Memory {
+        Memory {
+            data: [0; MEM_SIZE],
+        }
+    }
+
+    fn set_mem(&mut self, addr: u16, val: u16) {
+        self.data[addr as usize] = val;
+    }
+
+    fn get_mem(&self, addr: u16) -> u16 {
+        return self.data[addr as usize];
+    }
+}
+
+////////////////
+// VM interface
+////////////////
+
+struct VM {
+    mem: Memory,
+}
+
+impl VM {
+    fn new() -> VM {
+        VM { mem: Memory::new() }
+    }
+}
+
+////////////////
+// driver code
+////////////////
 
 fn main() {
     println!("Hello, world!");
