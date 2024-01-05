@@ -1,9 +1,6 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-const MEM_SIZE: usize = 1 << 16;
-const PC_START: usize = 0x3000;
-
 enum OpCodes {
     // branch
     BR = 0,
@@ -39,6 +36,23 @@ enum OpCodes {
     TRAP,
 }
 
+////////////////
+// registers
+////////////////
+
+// 
+// condition flags
+//
+
+enum CondFlags {
+    // positive (P)
+    POS = 1 << 0,
+    // zero (Z)
+    ZRO = 1 << 1,
+    // negative (N)
+    NEG = 1 << 2,
+}
+
 struct Registers {
     r0: u16,
     r1: u16,
@@ -52,6 +66,8 @@ struct Registers {
     cond: u16,
     count: u16,
 }
+
+const PC_START: usize = 0x3000;
 
 impl Registers {
     fn new() -> Registers {
@@ -94,7 +110,31 @@ impl Registers {
         let reg = &*self.register_reference(idx);
         *reg
     }
+
+    fn set_cond(&mut self, idx: u16) {
+        let val = self.get_reg(idx);
+
+        if (val as i16) > 0 {
+            self.cond = CondFlags::POS as u16;
+        } else if (val as i16) < 0 {
+            self.cond = CondFlags::NEG as u16;
+        } else if val == 0 {
+            self.cond = CondFlags::ZRO as u16;
+        }
+    }
+
+    fn set_reg_with_cond(&mut self, idx: u16, val: u16) {
+        self.set_reg(idx, val);
+        self.set_cond(idx);
+    }
 }
+
+////////////////
+// VM interface
+////////////////
+
+
+const MEM_SIZE: usize = 1 << 16;
 
 struct VM {
     mem: [u16; MEM_SIZE]
@@ -105,6 +145,7 @@ fn main() {
 
     let mut regs = Registers::new();
     println!("was {}", regs.get_reg(0));
-    regs.set_reg(0, 3);
+    regs.set_reg_with_cond(0, (0i16) as u16);
     println!("set to {}", regs.get_reg(0));
+    println!("condition: {}", regs.get_reg(9));
 }
