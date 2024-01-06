@@ -73,7 +73,7 @@ pub fn execute_instruction(vm: &mut VM, instr: u16) {
         OpCode::ADD => todo!("ADD"),
         OpCode::LD => op_ld(vm, instr),
         OpCode::ST => todo!("ST"),
-        OpCode::JSR => todo!("JSR"),
+        OpCode::JSR => op_jsr(vm, instr),
         OpCode::AND => todo!("AND"),
         OpCode::LDR => op_ldr(vm, instr),
         OpCode::STR => todo!("STR"),
@@ -129,6 +129,19 @@ fn op_ldr(vm: &mut VM, instr: u16) {
 
     let addr = vm.registers.get_reg(base_r) + offset;
     vm.registers.set_reg_with_cond(dr, vm.mem.get_mem(addr));
+}
+
+fn op_jsr(vm: &mut VM, instr: u16) {
+    // this function also includes JSRR
+    vm.registers.r7 = vm.registers.pc;
+
+    if (instr >> 11) & 1 == 0 {
+        let base_r = (instr >> 6) & 0b111;
+        vm.registers.pc = vm.registers.get_reg(base_r);
+    } else {
+        let offset = sign_extend(instr & 0x7ff, 11);
+        vm.registers.pc += offset;
+    }
 }
 
 fn op_trap(vm: &mut VM, instr: u16) {
