@@ -4,6 +4,10 @@
 
 use crate::vm::VM;
 
+////////////////
+// Main part
+////////////////
+
 #[derive(Debug)]
 enum OpCode {
     // branch
@@ -72,15 +76,15 @@ pub fn execute_instruction(vm: &mut VM, instr: u16) {
         OpCode::BR => todo!("BR"),
         OpCode::ADD => todo!("ADD"),
         OpCode::LD => op_ld(vm, instr),
-        OpCode::ST => todo!("ST"),
+        OpCode::ST => op_st(vm, instr),
         OpCode::JSR => op_jsr(vm, instr),
         OpCode::AND => todo!("AND"),
         OpCode::LDR => op_ldr(vm, instr),
-        OpCode::STR => todo!("STR"),
+        OpCode::STR => op_str(vm, instr),
         OpCode::RTI => todo!("RTI"),
         OpCode::NOT => todo!("NOT"),
         OpCode::LDI => op_ldi(vm, instr),
-        OpCode::STI => todo!("STI"),
+        OpCode::STI => op_sti(vm, instr),
         OpCode::JMP => todo!("JMP"),
         OpCode::RES => todo!("RES"),
         OpCode::LEA => op_lea(vm, instr),
@@ -100,24 +104,30 @@ fn sign_extend(x: u16, bits: usize) -> u16 {
 
 fn no_op(vm: &mut VM, instr: u16) {}
 
+////////////////
+// Load ops
+////////////////
+
 fn op_lea(vm: &mut VM, instr: u16) {
     let dr = (instr >> 9) & 0b111;
     let offset = sign_extend(instr & 0x1ff, 9);
 
-    vm.registers.set_reg_with_cond(dr, vm.registers.pc + offset);
+    vm.registers
+        .set_reg_with_cond(dr, vm.registers.pc.wrapping_add(offset));
 }
 
 fn op_ld(vm: &mut VM, instr: u16) {
     let dr = (instr >> 9) & 0b111;
     let offset = sign_extend(instr & 0x1ff, 9);
 
-    vm.registers.set_reg_with_cond(dr, vm.mem.get_mem(vm.registers.pc + offset));
+    vm.registers
+        .set_reg_with_cond(dr, vm.mem.get_mem(vm.registers.pc.wrapping_add(offset)));
 }
 
 fn op_ldi(vm: &mut VM, instr: u16) {
     let dr = (instr >> 9) & 0b111;
     let offset = sign_extend(instr & 0x1ff, 9);
-    let indirect = vm.mem.get_mem(vm.registers.pc + offset);
+    let indirect = vm.mem.get_mem(vm.registers.pc.wrapping_add(offset));
 
     vm.registers.set_reg_with_cond(dr, vm.mem.get_mem(indirect));
 }
@@ -127,7 +137,7 @@ fn op_ldr(vm: &mut VM, instr: u16) {
     let base_r = (instr >> 6) & 0b111;
     let offset = sign_extend(instr & 0x3f, 6);
 
-    let addr = vm.registers.get_reg(base_r) + offset;
+    let addr = vm.registers.get_reg(base_r).wrapping_add(offset);
     vm.registers.set_reg_with_cond(dr, vm.mem.get_mem(addr));
 }
 
@@ -140,9 +150,50 @@ fn op_jsr(vm: &mut VM, instr: u16) {
         vm.registers.pc = vm.registers.get_reg(base_r);
     } else {
         let offset = sign_extend(instr & 0x7ff, 11);
-        vm.registers.pc += offset;
+        vm.registers.pc = vm.registers.pc.wrapping_add(offset);
     }
 }
+
+////////////////
+// Store ops
+////////////////
+
+fn op_st(vm: &mut VM, instr: u16) {
+    let sr = (instr >> 9) & 0b111;
+    let offset = sign_extend(instr & 0x1ff, 9);
+    vm.mem.set_mem(
+        vm.registers.pc.wrapping_add(offset),
+        vm.registers.get_reg(sr),
+    );
+}
+
+fn op_sti(vm: &mut VM, instr: u16) {
+    let sr = (instr >> 9) & 0b111;
+    let offset = sign_extend(instr & 0x1ff, 9);
+
+    let addr = vm.mem.get_mem(vm.registers.pc.wrapping_add(offset));
+    vm.mem.set_mem(addr, vm.registers.get_reg(sr));
+}
+
+fn op_str(vm: &mut VM, instr: u16) {
+    let sr = (instr >> 9) & 0b111;
+    let base_r = (instr >> 6) & 0b111;
+    let offset = sign_extend(instr & 0x3f, 6);
+
+    // NOTE:
+    // this is how rodrigo did it:
+    //
+    //  let addr = (vm.registers.get_reg(base_r) as u32 + offset as u32) as u16;
+    //
+    // apparently narrowing casts automatically wrap integers
+    // this is more explicit
+    let addr = vm.registers.get_reg(base_r).wrapping_add(offset);
+    vm.mem.set_mem(addr, vm.registers.get_reg(sr));
+}
+
+////////////////
+// Trap/trap routines
+////////////////
 
 fn op_trap(vm: &mut VM, instr: u16) {
     // conform to spec
