@@ -12,13 +12,14 @@ use byteorder::{BigEndian, ReadBytesExt};
 use std::{fs::File, io::BufReader};
 
 mod instruction;
+mod memory;
 
 ////////////////
 // registers
 ////////////////
 
 // condition flags (COND register)
-pub enum CondFlags {
+enum CondFlags {
     // positive (P)
     POS = 1 << 0,
     // zero (Z)
@@ -106,37 +107,11 @@ impl Registers {
 }
 
 ////////////////
-// memory
-////////////////
-
-const MEM_SIZE: usize = 1 << 16;
-
-struct Memory {
-    data: [u16; MEM_SIZE],
-}
-
-impl Memory {
-    fn new() -> Memory {
-        Memory {
-            data: [0; MEM_SIZE],
-        }
-    }
-
-    fn set_mem(&mut self, addr: u16, val: u16) {
-        self.data[addr as usize] = val;
-    }
-
-    fn get_mem(&self, addr: u16) -> u16 {
-        return self.data[addr as usize];
-    }
-}
-
-////////////////
 // VM interface
 ////////////////
 
 pub struct VM {
-    mem: Memory,
+    mem: memory::Memory,
     registers: Registers,
     running: bool,
 }
@@ -144,7 +119,7 @@ pub struct VM {
 impl VM {
     pub fn new() -> VM {
         VM {
-            mem: Memory::new(),
+            mem: memory::Memory::new(),
             registers: Registers::new(),
             running: false,
         }
@@ -198,7 +173,7 @@ impl VM {
             // remember PC points to the *next* instruction at all times
 
             // disallow reading past memory bounds
-            if self.registers.pc as usize == MEM_SIZE - 1 {
+            if self.registers.pc as usize == memory::MEM_SIZE - 1 {
                 self.running = false
             } else {
                 self.registers.pc += 1;
