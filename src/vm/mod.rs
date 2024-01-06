@@ -18,7 +18,7 @@ mod instruction;
 ////////////////
 
 // condition flags (COND register)
-enum CondFlags {
+pub enum CondFlags {
     // positive (P)
     POS = 1 << 0,
     // zero (Z)

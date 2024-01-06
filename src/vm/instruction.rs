@@ -73,7 +73,7 @@ pub fn execute_instruction(vm: &mut VM, instr: u16) {
     let opcode = get_opcode(instr);
 
     match opcode {
-        OpCode::BR => todo!("BR"),
+        OpCode::BR => op_br(vm, instr),
         OpCode::ADD => op_add(vm, instr),
         OpCode::LD => op_ld(vm, instr),
         OpCode::ST => op_st(vm, instr),
@@ -142,7 +142,7 @@ fn op_ldr(vm: &mut VM, instr: u16) {
 }
 
 ////////////////
-// Jumps
+// Jumps/branches
 ////////////////
 
 fn op_jsr(vm: &mut VM, instr: u16) {
@@ -154,6 +154,17 @@ fn op_jsr(vm: &mut VM, instr: u16) {
         vm.registers.pc = vm.registers.get_reg(base_r);
     } else {
         let offset = sign_extend(instr & 0x7ff, 11);
+        vm.registers.pc = vm.registers.pc.wrapping_add(offset);
+    }
+}
+
+fn op_br(vm: &mut VM, instr: u16) {
+    let offset = sign_extend(instr & 0x1ff, 9);
+    // technically the COND we have is just a part of the PSR register in the spec
+    // therefore isolate the last 3 bits
+    let cond = vm.registers.cond & 0x7;
+
+    if (instr >> 9) & 0x7 & cond != 0 {
         vm.registers.pc = vm.registers.pc.wrapping_add(offset);
     }
 }
