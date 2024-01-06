@@ -71,15 +71,15 @@ pub fn execute_instruction(vm: &mut VM, instr: u16) {
     match opcode {
         OpCode::BR => todo!("BR"),
         OpCode::ADD => todo!("ADD"),
-        OpCode::LD => todo!("LD"),
+        OpCode::LD => op_ld(vm, instr),
         OpCode::ST => todo!("ST"),
         OpCode::JSR => todo!("JSR"),
         OpCode::AND => todo!("AND"),
-        OpCode::LDR => todo!("LDR"),
+        OpCode::LDR => op_ldr(vm, instr),
         OpCode::STR => todo!("STR"),
         OpCode::RTI => todo!("RTI"),
         OpCode::NOT => todo!("NOT"),
-        OpCode::LDI => todo!("LDI"),
+        OpCode::LDI => op_ldi(vm, instr),
         OpCode::STI => todo!("STI"),
         OpCode::JMP => todo!("JMP"),
         OpCode::RES => todo!("RES"),
@@ -101,9 +101,34 @@ fn sign_extend(x: u16, bits: usize) -> u16 {
 fn no_op(vm: &mut VM, instr: u16) {}
 
 fn op_lea(vm: &mut VM, instr: u16) {
-    let dr = (instr >> 8) & 0b111;
-    let offset = sign_extend(instr & 0xff, 9);
-    vm.registers.set_reg(dr, vm.registers.pc + offset);
+    let dr = (instr >> 9) & 0b111;
+    let offset = sign_extend(instr & 0x1ff, 9);
+
+    vm.registers.set_reg_with_cond(dr, vm.registers.pc + offset);
+}
+
+fn op_ld(vm: &mut VM, instr: u16) {
+    let dr = (instr >> 9) & 0b111;
+    let offset = sign_extend(instr & 0x1ff, 9);
+
+    vm.registers.set_reg_with_cond(dr, vm.mem.get_mem(vm.registers.pc + offset));
+}
+
+fn op_ldi(vm: &mut VM, instr: u16) {
+    let dr = (instr >> 9) & 0b111;
+    let offset = sign_extend(instr & 0x1ff, 9);
+    let indirect = vm.mem.get_mem(vm.registers.pc + offset);
+
+    vm.registers.set_reg_with_cond(dr, vm.mem.get_mem(indirect));
+}
+
+fn op_ldr(vm: &mut VM, instr: u16) {
+    let dr = (instr >> 9) & 0b111;
+    let base_r = (instr >> 6) & 0b111;
+    let offset = sign_extend(instr & 0x3f, 6);
+
+    let addr = vm.registers.get_reg(base_r) + offset;
+    vm.registers.set_reg_with_cond(dr, vm.mem.get_mem(addr));
 }
 
 fn op_trap(vm: &mut VM, instr: u16) {
