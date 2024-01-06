@@ -115,10 +115,23 @@ fn op_trap(vm: &mut VM, instr: u16) {
     match trap_vector {
         0x20 => todo!("GETC"),
         0x21 => todo!("OUT"),
-        0x22 => todo!("PUTS"),
+        0x22 => trap_puts(vm),
         0x23 => todo!("IN"),
         0x24 => todo!("PUTSP"),
         0x25 => vm.running = false,
         _ => unimplemented!(),
+    }
+}
+
+fn trap_puts(vm: &mut VM) {
+    let mut idx = vm.registers.r0;
+    loop {
+        let c = vm.mem.get_mem(idx) as u8 as char;
+        if c == '\0' {
+            break;
+        }
+
+        print!("{}", c);
+        idx += 1;
     }
 }
