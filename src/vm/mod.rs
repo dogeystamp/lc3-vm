@@ -10,6 +10,7 @@
 
 use byteorder::{BigEndian, ReadBytesExt};
 use std::{fs::File, io::BufReader};
+
 mod instruction;
 
 ////////////////
@@ -59,6 +60,7 @@ impl Registers {
         }
     }
 
+    /// Map an integer index to its register
     fn register_reference(&mut self, idx: u16) -> &mut u16 {
         match idx {
             0 => &mut self.r0,
@@ -75,11 +77,11 @@ impl Registers {
         }
     }
 
-    pub fn set_reg(&mut self, idx: u16, val: u16) {
+    fn set_reg(&mut self, idx: u16, val: u16) {
         *self.register_reference(idx) = val;
     }
 
-    pub fn get_reg(&mut self, idx: u16) -> u16 {
+    fn get_reg(&mut self, idx: u16) -> u16 {
         let reg = &*self.register_reference(idx);
         *reg
     }
@@ -97,7 +99,7 @@ impl Registers {
         }
     }
 
-    pub fn set_reg_with_cond(&mut self, idx: u16, val: u16) {
+    fn set_reg_with_cond(&mut self, idx: u16, val: u16) {
         self.set_reg(idx, val);
         self.set_cond(idx);
     }
@@ -120,11 +122,11 @@ impl Memory {
         }
     }
 
-    pub fn set_mem(&mut self, addr: u16, val: u16) {
+    fn set_mem(&mut self, addr: u16, val: u16) {
         self.data[addr as usize] = val;
     }
 
-    pub fn get_mem(&self, addr: u16) -> u16 {
+    fn get_mem(&self, addr: u16) -> u16 {
         return self.data[addr as usize];
     }
 }
@@ -185,8 +187,17 @@ impl VM {
     }
 
     pub fn execute(&mut self) {
-        loop {
-            self.registers.pc += 1;
+        let mut running: bool = true;
+
+        while running {
+            instruction::execute_instruction(self);
+
+            // disallow reading past memory bounds
+            if self.registers.pc as usize == MEM_SIZE - 1 {
+                running = false
+            } else {
+                self.registers.pc += 1;
+            }
         }
     }
 }
