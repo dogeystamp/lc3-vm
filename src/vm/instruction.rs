@@ -84,7 +84,7 @@ pub fn execute_instruction(vm: &mut VM, instr: u16) {
         OpCode::JMP => no_op(vm, instr),
         OpCode::RES => no_op(vm, instr),
         OpCode::LEA => op_lea(vm, instr),
-        OpCode::TRAP => no_op(vm, instr),
+        OpCode::TRAP => op_trap(vm, instr),
         OpCode::NOOP => no_op(vm, instr),
     }
 }
@@ -104,4 +104,21 @@ fn op_lea(vm: &mut VM, instr: u16) {
     let dr = (instr >> 8) & 0b111;
     let offset = sign_extend(instr & 0xff, 9);
     vm.registers.set_reg(dr, vm.registers.pc + offset);
+}
+
+fn op_trap(vm: &mut VM, instr: u16) {
+    // conform to spec
+    // (we don't actually need it in this implementation)
+    vm.registers.r7 = vm.registers.pc;
+
+    let trap_vector = instr & 0xff;
+    match trap_vector {
+        0x20 => todo!("GETC"),
+        0x21 => todo!("OUT"),
+        0x22 => todo!("PUTS"),
+        0x23 => todo!("IN"),
+        0x24 => todo!("PUTSP"),
+        0x25 => todo!("HALT"),
+        _ => unimplemented!(),
+    }
 }

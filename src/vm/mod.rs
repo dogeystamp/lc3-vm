@@ -192,6 +192,9 @@ impl VM {
         while running {
             let instr = self.mem.get_mem(self.registers.pc);
 
+            // NOTE
+            // remember PC points to the *next* instruction at all times
+
             // disallow reading past memory bounds
             if self.registers.pc as usize == MEM_SIZE - 1 {
                 running = false
