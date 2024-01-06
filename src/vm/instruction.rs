@@ -118,7 +118,7 @@ fn op_trap(vm: &mut VM, instr: u16) {
         0x22 => todo!("PUTS"),
         0x23 => todo!("IN"),
         0x24 => todo!("PUTSP"),
-        0x25 => todo!("HALT"),
+        0x25 => vm.running = false,
         _ => unimplemented!(),
     }
 }

@@ -138,6 +138,7 @@ impl Memory {
 pub struct VM {
     mem: Memory,
     registers: Registers,
+    running: bool,
 }
 
 impl VM {
@@ -145,6 +146,7 @@ impl VM {
         VM {
             mem: Memory::new(),
             registers: Registers::new(),
+            running: false,
         }
     }
 
@@ -187,9 +189,9 @@ impl VM {
     }
 
     pub fn execute(&mut self) {
-        let mut running: bool = true;
+        self.running = true;
 
-        while running {
+        while self.running {
             let instr = self.mem.get_mem(self.registers.pc);
 
             // NOTE
@@ -197,7 +199,7 @@ impl VM {
 
             // disallow reading past memory bounds
             if self.registers.pc as usize == MEM_SIZE - 1 {
-                running = false
+                self.running = false
             } else {
                 self.registers.pc += 1;
             }
