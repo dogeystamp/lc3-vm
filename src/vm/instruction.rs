@@ -74,15 +74,15 @@ pub fn execute_instruction(vm: &mut VM, instr: u16) {
 
     match opcode {
         OpCode::BR => todo!("BR"),
-        OpCode::ADD => todo!("ADD"),
+        OpCode::ADD => op_add(vm, instr),
         OpCode::LD => op_ld(vm, instr),
         OpCode::ST => op_st(vm, instr),
         OpCode::JSR => op_jsr(vm, instr),
-        OpCode::AND => todo!("AND"),
+        OpCode::AND => op_and(vm, instr),
         OpCode::LDR => op_ldr(vm, instr),
         OpCode::STR => op_str(vm, instr),
         OpCode::RTI => todo!("RTI"),
-        OpCode::NOT => todo!("NOT"),
+        OpCode::NOT => op_not(vm, instr),
         OpCode::LDI => op_ldi(vm, instr),
         OpCode::STI => op_sti(vm, instr),
         OpCode::JMP => todo!("JMP"),
@@ -141,6 +141,10 @@ fn op_ldr(vm: &mut VM, instr: u16) {
     vm.registers.set_reg_with_cond(dr, vm.mem.get_mem(addr));
 }
 
+////////////////
+// Jumps
+////////////////
+
 fn op_jsr(vm: &mut VM, instr: u16) {
     // this function also includes JSRR
     vm.registers.r7 = vm.registers.pc;
@@ -189,6 +193,54 @@ fn op_str(vm: &mut VM, instr: u16) {
     // this is more explicit
     let addr = vm.registers.get_reg(base_r).wrapping_add(offset);
     vm.mem.set_mem(addr, vm.registers.get_reg(sr));
+}
+
+////////////////
+// Arithmetic
+////////////////
+
+fn op_add(vm: &mut VM, instr: u16) {
+    let dr = (instr >> 9) & 0b111;
+    let sr1 = (instr >> 6) & 0b111;
+
+    if (instr >> 5) & 1 == 0 {
+        let sr2 = instr & 0b111;
+
+        let res = vm.registers.get_reg(sr1).wrapping_add(vm.registers.get_reg(sr2));
+        vm.registers.set_reg_with_cond(dr, res);
+    } else {
+        let imm = instr & 0x1f;
+
+        let res = vm.registers.get_reg(sr1).wrapping_add(imm);
+        vm.registers.set_reg_with_cond(dr, res);
+    }
+}
+
+fn op_and(vm: &mut VM, instr: u16) {
+    let dr = (instr >> 9) & 0b111;
+    let sr1 = (instr >> 6) & 0b111;
+
+    if (instr >> 5) & 1 == 0 {
+        let sr2 = instr & 0b111;
+
+        let res = vm.registers.get_reg(sr1) & vm.registers.get_reg(sr2);
+        vm.registers.set_reg_with_cond(dr, res);
+    } else {
+        let imm = instr & 0x1f;
+
+        let res = vm.registers.get_reg(sr1) & imm;
+        vm.registers.set_reg_with_cond(dr, res);
+    }
+}
+
+fn op_not(vm: &mut VM, instr: u16) {
+    let dr = (instr >> 9) & 0b111;
+    let sr = (instr >> 6) & 0b111;
+
+    // NOTE
+    // rustc is very friendly and tells you off if you use ~ as bitwise not
+    let res = !vm.registers.get_reg(sr);
+    vm.registers.set_reg_with_cond(sr, res);
 }
 
 ////////////////
