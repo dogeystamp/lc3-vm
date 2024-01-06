@@ -65,29 +65,43 @@ fn get_opcode(instruction: u16) -> OpCode {
     }
 }
 
-pub fn execute_instruction(vm: &mut VM) {
-    let instruction: u16 = vm.mem.get_mem(vm.registers.pc);
-    let opcode = get_opcode(instruction);
+pub fn execute_instruction(vm: &mut VM, instr: u16) {
+    let opcode = get_opcode(instr);
 
     match opcode {
-        OpCode::BR => no_op(vm),
-        OpCode::ADD => no_op(vm),
-        OpCode::LD => no_op(vm),
-        OpCode::ST => no_op(vm),
-        OpCode::JSR => no_op(vm),
-        OpCode::AND => no_op(vm),
-        OpCode::LDR => no_op(vm),
-        OpCode::STR => no_op(vm),
-        OpCode::RTI => no_op(vm),
-        OpCode::NOT => no_op(vm),
-        OpCode::LDI => no_op(vm),
-        OpCode::STI => no_op(vm),
-        OpCode::JMP => no_op(vm),
-        OpCode::RES => no_op(vm),
-        OpCode::LEA => no_op(vm),
-        OpCode::TRAP => no_op(vm),
-        OpCode::NOOP => no_op(vm),
+        OpCode::BR => no_op(vm, instr),
+        OpCode::ADD => no_op(vm, instr),
+        OpCode::LD => no_op(vm, instr),
+        OpCode::ST => no_op(vm, instr),
+        OpCode::JSR => no_op(vm, instr),
+        OpCode::AND => no_op(vm, instr),
+        OpCode::LDR => no_op(vm, instr),
+        OpCode::STR => no_op(vm, instr),
+        OpCode::RTI => no_op(vm, instr),
+        OpCode::NOT => no_op(vm, instr),
+        OpCode::LDI => no_op(vm, instr),
+        OpCode::STI => no_op(vm, instr),
+        OpCode::JMP => no_op(vm, instr),
+        OpCode::RES => no_op(vm, instr),
+        OpCode::LEA => op_lea(vm, instr),
+        OpCode::TRAP => no_op(vm, instr),
+        OpCode::NOOP => no_op(vm, instr),
     }
 }
 
-fn no_op(vm: &mut VM) {}
+/// Sign extend a value, given the amount of bits it currently has
+fn sign_extend(x: u16, bits: usize) -> u16 {
+    if (x >> (bits - 1) & 1) == 1 {
+        x | (0xffff << bits)
+    } else {
+        x
+    }
+}
+
+fn no_op(vm: &mut VM, instr: u16) {}
+
+fn op_lea(vm: &mut VM, instr: u16) {
+    let dr = (instr >> 8) & 0b111;
+    let offset = sign_extend(instr & 0xff, 9);
+    vm.registers.set_reg(dr, vm.registers.pc + offset);
+}

@@ -190,7 +190,7 @@ impl VM {
         let mut running: bool = true;
 
         while running {
-            instruction::execute_instruction(self);
+            let instr = self.mem.get_mem(self.registers.pc);
 
             // disallow reading past memory bounds
             if self.registers.pc as usize == MEM_SIZE - 1 {
@@ -198,6 +198,8 @@ impl VM {
             } else {
                 self.registers.pc += 1;
             }
+
+            instruction::execute_instruction(self, instr);
         }
     }
 }
