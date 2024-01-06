@@ -6,6 +6,8 @@
 // memory interface
 ////////////////
 
+use super::terminal_io;
+
 pub const MEM_SIZE: usize = 1 << 16;
 
 pub struct Memory {
@@ -25,7 +27,9 @@ impl Memory {
 
     pub fn get_mem(&self, addr: u16) -> u16 {
         if addr >= 0xFE00 {
-            unimplemented!("mem-map: {:#X}", addr);
+            match addr {
+                _ => unimplemented!("mem-map: {:#X}", addr),
+            }
         }
         return self.data[addr as usize];
     }

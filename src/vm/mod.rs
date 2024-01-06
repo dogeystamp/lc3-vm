@@ -13,6 +13,7 @@ use std::{fs::File, io::BufReader};
 
 mod instruction;
 mod memory;
+pub mod terminal_io;
 
 ////////////////
 // registers

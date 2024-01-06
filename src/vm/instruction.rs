@@ -224,7 +224,10 @@ fn op_add(vm: &mut VM, instr: u16) {
     if (instr >> 5) & 1 == 0 {
         let sr2 = instr & 0b111;
 
-        let res = vm.registers.get_reg(sr1).wrapping_add(vm.registers.get_reg(sr2));
+        let res = vm
+            .registers
+            .get_reg(sr1)
+            .wrapping_add(vm.registers.get_reg(sr2));
         vm.registers.set_reg_with_cond(dr, res);
     } else {
         let imm = instr & 0x1f;
