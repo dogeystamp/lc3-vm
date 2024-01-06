@@ -85,7 +85,7 @@ pub fn execute_instruction(vm: &mut VM, instr: u16) {
         OpCode::NOT => op_not(vm, instr),
         OpCode::LDI => op_ldi(vm, instr),
         OpCode::STI => op_sti(vm, instr),
-        OpCode::JMP => todo!("JMP"),
+        OpCode::JMP => op_jmp(vm, instr),
         OpCode::RES => todo!("RES"),
         OpCode::LEA => op_lea(vm, instr),
         OpCode::TRAP => op_trap(vm, instr),
@@ -167,6 +167,13 @@ fn op_br(vm: &mut VM, instr: u16) {
     if (instr >> 9) & 0x7 & cond != 0 {
         vm.registers.pc = vm.registers.pc.wrapping_add(offset);
     }
+}
+
+fn op_jmp(vm: &mut VM, instr: u16) {
+    // RET is a special case of this where BaseR is R7
+    let base_r = (instr >> 6) & 0b111;
+
+    vm.registers.pc = vm.registers.get_reg(base_r);
 }
 
 ////////////////
