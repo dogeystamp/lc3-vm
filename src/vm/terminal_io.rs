@@ -10,8 +10,70 @@ use libc::STDIN_FILENO;
 
 extern crate ctrlc;
 
+use std::io;
+use std::io::BufRead;
+use std::sync::mpsc;
+use std::sync::mpsc::Receiver;
+use std::thread;
+
+////////////////
+// keyboard I/O interface
+////////////////
+
+pub trait KeyboardIO {
+    /// Poll stdin for a keypress
+    fn get_key(&mut self) -> Option<u8>;
+}
+
+pub struct TerminalIO {
+    stdin_channel: Receiver<u8>,
+}
+
+impl TerminalIO {
+    pub fn new() -> TerminalIO {
+        setup_termios();
+        TerminalIO {
+            stdin_channel: Self::spawn_stdin_channel(),
+        }
+    }
+
+    fn spawn_stdin_channel() -> Receiver<u8> {
+        // https://stackoverflow.com/questions/30012995
+        let (tx, rx) = mpsc::channel::<u8>();
+        let mut buffer = Vec::new();
+        thread::spawn(move || loop {
+            buffer.clear();
+            let _ = io::stdin().lock().read_until(1, &mut buffer);
+            for c in &buffer {
+                let _ = tx.send(*c);
+            }
+        });
+        rx
+    }
+}
+
+impl Drop for TerminalIO {
+    fn drop(&mut self) {
+        restore_terminal();
+    }
+}
+
+impl KeyboardIO for TerminalIO {
+    fn get_key(&mut self) -> Option<u8> {
+        match self.stdin_channel.try_recv() {
+            Ok(key) => return Some(key),
+            Err(mpsc::TryRecvError::Empty) => return None,
+            Err(mpsc::TryRecvError::Disconnected) => panic!("terminal keyboard stream broke"),
+        }
+    }
+}
+
+////////////////
+// termios stuff
+////////////////
+
 /// Configure raw input (see termios(3) man-page)
-pub fn setup_terminal() {
+fn setup_termios() {
     let mut term: Termios = Termios::from_fd(STDIN_FILENO).unwrap();
     // ICANON (canonical) is line-by-line input (i.e. press enter to send)
     // ECHO is showing the characters you type
