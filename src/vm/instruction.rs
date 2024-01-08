@@ -8,8 +8,12 @@ use crate::vm::VM;
 // Main part
 ////////////////
 
+pub fn get_instruction(vm: &mut VM) -> u16 {
+    return vm.mem.get_mem(vm.registers.pc);
+}
+
 #[derive(Debug)]
-enum OpCode {
+pub enum OpCode {
     // branch
     BR = 0,
     // add
@@ -46,7 +50,7 @@ enum OpCode {
     NOOP,
 }
 
-fn get_opcode(instruction: u16) -> OpCode {
+pub fn get_opcode(instruction: u16) -> OpCode {
     // the opcode is stored in the left 4 bits
     match instruction >> 12 {
         0 => OpCode::BR,
@@ -92,6 +96,10 @@ pub fn execute_instruction(vm: &mut VM, instr: u16) {
         OpCode::NOOP => no_op(vm, instr),
     }
 }
+
+////////////////
+// Helpers
+////////////////
 
 /// Sign extend a value, given the amount of bits it currently has
 fn sign_extend(x: u16, bits: usize) -> u16 {
@@ -164,7 +172,12 @@ fn op_br(vm: &mut VM, instr: u16) {
     // therefore isolate the last 3 bits
     let cond = vm.registers.cond & 0x7;
 
-    if (instr >> 9) & 0x7 & cond != 0 {
+    let need_cond = (instr >> 9) & 0x7;
+
+    // BRnzp is unconditional
+    // if we haven't performed any instructions that set conditions,
+    // COND might just be 0
+    if need_cond & cond != 0 || need_cond == 0b111 {
         vm.registers.pc = vm.registers.pc.wrapping_add(offset);
     }
 }

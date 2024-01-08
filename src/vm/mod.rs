@@ -120,6 +120,7 @@ pub struct VM<'a> {
     mem: memory::Memory<'a>,
     registers: Registers,
     running: bool,
+    debug_state: DebugState,
 }
 
 impl VM<'_> {
@@ -128,6 +129,7 @@ impl VM<'_> {
             mem: memory::Memory::new(keyboard_io),
             registers: Registers::new(),
             running: false,
+            debug_state: DebugState::new(),
         }
     }
 
@@ -173,7 +175,11 @@ impl VM<'_> {
         self.running = true;
 
         while self.running {
-            let instr = self.mem.get_mem(self.registers.pc);
+            let instr = instruction::get_instruction(self);
+
+            if self.debug_state.debugging {
+                DebugState::print_state(self);
+            }
 
             // NOTE
             // remember PC points to the *next* instruction at all times
@@ -187,5 +193,43 @@ impl VM<'_> {
 
             instruction::execute_instruction(self, instr);
         }
+    }
+}
+
+////////////////
+// debugging
+////////////////
+
+struct DebugState {
+    debugging: bool,
+}
+
+impl DebugState {
+    fn new() -> DebugState {
+        DebugState {
+            debugging: false,
+        }
+    }
+
+    /// Print current VM state
+    fn print_state(vm: &mut VM) {
+        let instr = instruction::get_instruction(vm);
+        let op_code = instruction::get_opcode(instr);
+
+        println!("PC: {:#x}, op: {:?}, params: {:#x}", vm.registers.pc, op_code, instr & 0x7ff);
+        for i in 0..=7 {
+            println!("R{}: {:#x}", i, vm.registers.get_reg(i));
+        }
+
+        let mut condstr = String::new();
+        let flags = ["P", "Z", "N"];
+        for i in 0..=2 {
+            if (1 << i) & vm.registers.cond == 1 {
+                condstr.push_str(flags[i]);
+            }
+        }
+        println!("COND: {:#x} ({})", vm.registers.cond, condstr);
+
+        println!();
     }
 }
