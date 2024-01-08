@@ -114,22 +114,20 @@ impl Registers {
 // NOTE
 // https://doc.rust-lang.org/book/ch10-03-lifetime-syntax.html
 // tl;dr the 'a is like a generic type name except it means that for some "lifetime" 'a, we will
-// hold a reference to `io` and we promise not to have it outlive the struct
+// hold a reference to `io` and we promise not to not have the struct outlive it
 // this helps prevent dangling references
 pub struct VM<'a> {
-    mem: memory::Memory,
+    mem: memory::Memory<'a>,
     registers: Registers,
-    io: &'a dyn terminal_io::KeyboardIO,
     running: bool,
 }
 
 impl VM<'_> {
-    pub fn new(keyboard_io: &impl terminal_io::KeyboardIO) -> VM {
+    pub fn new(keyboard_io: &mut dyn terminal_io::KeyboardIO) -> VM {
         VM {
-            mem: memory::Memory::new(),
+            mem: memory::Memory::new(keyboard_io),
             registers: Registers::new(),
             running: false,
-            io: keyboard_io
         }
     }
 

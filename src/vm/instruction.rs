@@ -275,7 +275,7 @@ fn op_trap(vm: &mut VM, instr: u16) {
 
     let trap_vector = instr & 0xff;
     match trap_vector {
-        0x20 => todo!("GETC"),
+        0x20 => trap_getc(vm),
         0x21 => todo!("OUT"),
         0x22 => trap_puts(vm),
         0x23 => todo!("IN"),
@@ -296,4 +296,9 @@ fn trap_puts(vm: &mut VM) {
         print!("{}", c);
         idx += 1;
     }
+}
+
+fn trap_getc(vm: &mut VM) {
+    while vm.mem.get_mem(0xFE00) & 1 == 0 {}
+    vm.registers.r0 = vm.mem.get_mem(0xFE02) & 0xFF;
 }
