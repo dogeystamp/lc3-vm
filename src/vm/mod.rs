@@ -133,6 +133,10 @@ impl VM<'_> {
         }
     }
 
+    pub fn set_debugging(&mut self, state: bool) {
+        self.debug_state.debugging = state;
+    }
+
     pub fn read_program(&mut self, path: &String) {
         let f = File::open(path).expect("Could not open program file");
         let mut f = BufReader::new(f);
