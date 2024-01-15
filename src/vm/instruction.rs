@@ -243,7 +243,7 @@ fn op_add(vm: &mut VM, instr: u16) {
             .wrapping_add(vm.registers.get_reg(sr2));
         vm.registers.set_reg_with_cond(dr, res);
     } else {
-        let imm = instr & 0x1f;
+        let imm = sign_extend(instr & 0x1f, 5);
 
         let res = vm.registers.get_reg(sr1).wrapping_add(imm);
         vm.registers.set_reg_with_cond(dr, res);
@@ -260,7 +260,7 @@ fn op_and(vm: &mut VM, instr: u16) {
         let res = vm.registers.get_reg(sr1) & vm.registers.get_reg(sr2);
         vm.registers.set_reg_with_cond(dr, res);
     } else {
-        let imm = instr & 0x1f;
+        let imm = sign_extend(instr & 0x1f, 5);
 
         let res = vm.registers.get_reg(sr1) & imm;
         vm.registers.set_reg_with_cond(dr, res);
