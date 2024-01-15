@@ -216,20 +216,20 @@ impl DebugState {
         let instr = instruction::get_instruction(vm);
         let op_code = instruction::get_opcode(instr);
 
-        println!("PC: {:#x}, op: {:?}, params: {:#x}", vm.registers.pc, op_code, instr & 0x7ff);
+        eprintln!("PC: {:#x}, op: {:?}, params: {:#x}", vm.registers.pc, op_code, instr & 0x7ff);
         for i in 0..=7 {
-            println!("R{}: {:#x}", i, vm.registers.get_reg(i));
+            eprintln!("R{}: {:#x}", i, vm.registers.get_reg(i));
         }
 
         let mut condstr = String::new();
         let flags = ["P", "Z", "N"];
         for i in 0..=2 {
-            if (1 << i) & vm.registers.cond == 1 {
+            if (1 << i) & vm.registers.cond != 0 {
                 condstr.push_str(flags[i]);
             }
         }
-        println!("COND: {:#x} ({})", vm.registers.cond, condstr);
+        eprintln!("COND: {:#x} ({})", vm.registers.cond, condstr);
 
-        println!();
+        eprintln!();
     }
 }
