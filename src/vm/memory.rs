@@ -30,7 +30,13 @@ impl Memory<'_> {
     pub fn get_mem(&mut self, addr: u16) -> u16 {
         if addr >= 0xFE00 {
             return match addr {
-                0xFE00 => self.io.check_key() as u16,
+                0xFE00 => {
+                    if self.io.check_key() {
+                        1 << 15
+                    } else {
+                        0
+                    }
+                }
                 0xFE02 => {
                     let key = match self.io.get_key() {
                         Some(key) => key as u16,

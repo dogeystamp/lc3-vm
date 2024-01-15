@@ -312,6 +312,6 @@ fn trap_puts(vm: &mut VM) {
 }
 
 fn trap_getc(vm: &mut VM) {
-    while vm.mem.get_mem(0xFE00) & 1 == 0 {}
+    while vm.mem.get_mem(0xFE00) & (1 << 15) == 0 {}
     vm.registers.r0 = vm.mem.get_mem(0xFE02) & 0xFF;
 }

@@ -29,6 +29,7 @@ pub trait KeyboardIO {
 
 pub struct TerminalIO {
     stdin_channel: Receiver<u8>,
+    char: Option<u8>,
 }
 
 impl TerminalIO {
@@ -36,6 +37,7 @@ impl TerminalIO {
         setup_termios();
         TerminalIO {
             stdin_channel: Self::spawn_stdin_channel(),
+            char: None,
         }
     }
 
@@ -59,17 +61,14 @@ impl Drop for TerminalIO {
 
 impl KeyboardIO for TerminalIO {
     fn get_key(&mut self) -> Option<u8> {
-        match self.stdin_channel.try_recv() {
-            Ok(key) => Some(key),
-            Err(mpsc::TryRecvError::Empty) => None,
-            Err(mpsc::TryRecvError::Disconnected) => panic!("terminal keyboard stream broke"),
-        }
+        self.char
     }
 
     fn check_key(&mut self) -> bool {
-        match self.stdin_channel.try_iter().peekable().peek() {
-            Some(data) => true,
-            None => false,
+        match self.stdin_channel.try_recv() {
+            Ok(key) => { self.char = Some(key); true },
+            Err(mpsc::TryRecvError::Empty) => false,
+            Err(mpsc::TryRecvError::Disconnected) => panic!("terminal keyboard stream broke"),
         }
     }
 }
