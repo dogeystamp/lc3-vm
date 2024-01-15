@@ -291,8 +291,8 @@ fn op_trap(vm: &mut VM, instr: u16) {
         0x20 => trap_getc(vm),
         0x21 => trap_out(vm),
         0x22 => trap_puts(vm),
-        0x23 => todo!("IN"),
-        0x24 => todo!("PUTSP"),
+        0x23 => trap_in(vm),
+        0x24 => trap_putsp(vm),
         0x25 => vm.running = false,
         _ => unimplemented!(),
     }
@@ -311,9 +311,31 @@ fn trap_puts(vm: &mut VM) {
     }
 }
 
+fn trap_putsp(vm: &mut VM) {
+    let mut idx = vm.registers.r0;
+
+    'iter: loop {
+        for mask in [0xFF, 0xFF00] {
+            let c = (vm.mem.get_mem(idx) & mask) as u8 as char;
+            if c == '\0' {
+                break 'iter;
+            }
+
+            print!("{}", c);
+        }
+        idx += 1;
+    }
+}
+
 fn trap_getc(vm: &mut VM) {
     while vm.mem.get_mem(0xFE00) & (1 << 15) == 0 {}
     vm.registers.r0 = vm.mem.get_mem(0xFE02) & 0xFF;
+}
+
+fn trap_in(vm: &mut VM) {
+    trap_getc(vm);
+    // echo character
+    trap_out(vm);
 }
 
 fn trap_out(vm: &mut VM) {
