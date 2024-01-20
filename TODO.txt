@@ -1,0 +1,44 @@
+https://www.jmeiners.com/lc3-vm/
+https://www.jmeiners.com/lc3-vm/supplies/lc3-isa.pdf
+https://www.rodrigoaraujo.me/posts/lets-build-an-lc-3-virtual-machine/
+
+[x] opcode enum
+[x] register getter/setter
+[x] condition flags enum
+[x] function to update the condition flags based on a register
+[x] memory getter/setter
+[x] read file as big-endian 2-byte instructions into memory
+[x] fetch-execute loop
+[x] implement execute
+	[x] function: get opcode from instruction
+	[x] match opcode to function
+[x] implement opcodes
+	[x] LEA
+	[x] ADD (reg)
+	[x] ADD (immediate)
+	[x] AND (reg)
+	[x] AND (immediate)
+	[x] BR
+	[x] JMP
+	[x] JSR
+	[x] JSRR
+	[x] LD
+	[x] LDI
+	[x] LDR
+	[x] LEA
+	[x] NOT
+	[x] RET
+	[!] RTI
+	[x] ST
+	[x] STI
+	[x] STR
+	[x] TRAP (see jmeiners article)
+		[x] getc
+		[x] out
+		[x] puts
+		[x] in
+		[x] putsp
+		[x] halt
+[x] keyboard mem-mapped i/o
+	[x] KBSR
+	[x] KBDR
