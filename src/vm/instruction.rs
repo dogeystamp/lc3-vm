@@ -3,6 +3,8 @@
 //////////////////////////////
 
 use crate::vm::VM;
+use std::io;
+use std::io::Write;
 
 ////////////////
 // Main part
@@ -309,6 +311,7 @@ fn trap_puts(vm: &mut VM) {
         print!("{}", c);
         idx += 1;
     }
+    let _ = io::stdout().flush();
 }
 
 fn trap_putsp(vm: &mut VM) {
@@ -325,6 +328,7 @@ fn trap_putsp(vm: &mut VM) {
         }
         idx += 1;
     }
+    let _ = io::stdout().flush();
 }
 
 fn trap_getc(vm: &mut VM) {
@@ -341,7 +345,10 @@ fn trap_in(vm: &mut VM) {
 fn trap_out(vm: &mut VM) {
     let val = char::from_u32((vm.registers.r0 & 0xFF).into());
     match val {
-        Some(c) => print!("{}", c),
+        Some(c) => {
+            let _ = io::stdout().flush();
+            print!("{}", c);
+        }
         None => {}
     }
 }

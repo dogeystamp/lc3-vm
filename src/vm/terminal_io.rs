@@ -61,14 +61,22 @@ impl Drop for TerminalIO {
 
 impl KeyboardIO for TerminalIO {
     fn get_key(&mut self) -> Option<u8> {
-        self.char
+        let c = self.char;
+        self.char = None;
+        c
     }
 
     fn check_key(&mut self) -> bool {
-        match self.stdin_channel.try_recv() {
-            Ok(key) => { self.char = Some(key); true },
-            Err(mpsc::TryRecvError::Empty) => false,
-            Err(mpsc::TryRecvError::Disconnected) => panic!("terminal keyboard stream broke"),
+        match self.char {
+            Some(c) => true,
+            None => match self.stdin_channel.try_recv() {
+                Ok(key) => {
+                    self.char = Some(key);
+                    true
+                }
+                Err(mpsc::TryRecvError::Empty) => false,
+                Err(mpsc::TryRecvError::Disconnected) => panic!("terminal keyboard stream broke"),
+            },
         }
     }
 }
