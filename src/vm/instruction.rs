@@ -276,7 +276,7 @@ fn op_not(vm: &mut VM, instr: u16) {
     // NOTE
     // rustc is very friendly and tells you off if you use ~ as bitwise not
     let res = !vm.registers.get_reg(sr);
-    vm.registers.set_reg_with_cond(sr, res);
+    vm.registers.set_reg_with_cond(dr, res);
 }
 
 ////////////////
