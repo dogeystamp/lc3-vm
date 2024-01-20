@@ -221,9 +221,7 @@ struct DebugState {
 
 impl DebugState {
     fn new() -> DebugState {
-        DebugState {
-            debugging: false,
-        }
+        DebugState { debugging: false }
     }
 
     /// Print current VM state
@@ -231,7 +229,12 @@ impl DebugState {
         let instr = instruction::get_instruction(vm);
         let op_code = instruction::get_opcode(instr);
 
-        eprintln!("PC: {:#x}, op: {:?}, params: {:#x}", vm.registers.pc, op_code, instr & 0x7ff);
+        eprintln!(
+            "PC: {:#x}, op: {:?}, params: {:#x}",
+            vm.registers.pc,
+            op_code,
+            instr & 0x7ff
+        );
         for i in 0..=7 {
             eprintln!("R{}: {:#x}", i, vm.registers.get_reg(i));
         }
